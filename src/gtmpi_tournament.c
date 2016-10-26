@@ -61,26 +61,29 @@
 */
 
 static int P;
-
 void gtmpi_init(int num_threads){
   P = num_threads;
 }
 
-void gtmpi_barrier(){
+void gtmpi_barrier() {
   int i, pe, stride;
   int tag = 0;
   
+  if (1 == P) return;
+
   MPI_Comm_rank(MPI_COMM_WORLD, &pe);
 
+  MPI_Status stats;
+  MPI_Request req;
   /// here, we set master process is final winner, slaves are losers.
   if (pe == 0) {
     /// waiting for wakeup when all losers reach the barrier 
     for (i = 1; i < P; i <<= 1) {
-      MPI_Recv(NULL, 0, MPI_INT, i, tag, MPI_COMM_WORLD, NULL);
+      MPI_Recv(NULL, 0, MPI_INT, i, tag, MPI_COMM_WORLD, &stats);
     }
     /// wakeup direct losers 
     for (i >>= 1; i > 0; i >>= 1) {
-      MPI_Isend(NULL, 0, MPI_INT, i, tag, MPI_COMM_WORLD, NULL);
+      MPI_Isend(NULL, 0, MPI_INT, i, tag, MPI_COMM_WORLD, &req);
     }
   } else {
     /// set stride for each round
@@ -89,21 +92,21 @@ void gtmpi_barrier(){
     while (pe % (stride << 1) == 0) {
       /// waiting for its local loser
       if (pe + stride < P) {
-        MPI_Recv(NULL, 0, MPI_INT, pe + stride, tag, MPI_COMM_WORLD, NULL);
+        MPI_Recv(NULL, 0, MPI_INT, pe + stride, tag, MPI_COMM_WORLD, &stats);
       }
       stride <<= 1;
     }
 
     /// notify its winner for its done
-    MPI_Isend(NULL, 0, MPI_INT, pe - stride, tag, MPI_COMM_WORLD, NULL);
+    MPI_Isend(NULL, 0, MPI_INT, pe - stride, tag, MPI_COMM_WORLD, &req);
     /// waiting for wakeup from its winner
-    MPI_Recv(NULL, 0, MPI_INT, pe - stride, tag, MPI_COMM_WORLD, NULL);
+    MPI_Recv(NULL, 0, MPI_INT, pe - stride, tag, MPI_COMM_WORLD, &stats);
 
     /// notify its local losers
     while (stride > 1) {
       stride >>= 1;
       if ((pe + stride) < P) {
-        MPI_Isend(NULL, 0, MPI_INT, pe - stride, tag, MPI_COMM_WORLD, NULL);
+        MPI_Isend(NULL, 0, MPI_INT, pe - stride, tag, MPI_COMM_WORLD, &req);
       }  /* if */
     }  /* while */
   }  /* if-else */

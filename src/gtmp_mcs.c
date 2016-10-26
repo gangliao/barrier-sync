@@ -83,6 +83,7 @@ typedef struct {
 omp_mcs_barrier_t* barrier_;
 
 void gtmp_init(int num_threads) {
+  barrier_ = (omp_mcs_barrier_t*)malloc(sizeof(omp_mcs_barrier_t));
   /// allocate memory for mcs barrier nodes
   posix_memalign((void**)&barrier_->nodes, 64,
 	sizeof(omp_mcs_barrier_node_t) * num_threads);

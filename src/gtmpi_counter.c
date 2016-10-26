@@ -34,16 +34,17 @@ void gtmpi_barrier(){
   int vpid, i;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &vpid);
-  
+  MPI_Status stats;
+  MPI_Request req;  
   if (vpid != 0) {
-    MPI_Isend(NULL, 0, MPI_INT, 0, 1, MPI_COMM_WORLD, NULL);
-    MPI_Recv(NULL, 0, MPI_INT, 0, 1, MPI_COMM_WORLD, NULL);
+    MPI_Isend(NULL, 0, MPI_INT, 0, 1, MPI_COMM_WORLD, &req);
+    MPI_Recv(NULL, 0, MPI_INT, 0, 1, MPI_COMM_WORLD, &stats);
   } else {
     for(i = 1; i < P; i++)
-      MPI_Recv(NULL, 0, MPI_INT, i, 1, MPI_COMM_WORLD, NULL);
+      MPI_Recv(NULL, 0, MPI_INT, i, 1, MPI_COMM_WORLD, &stats);
     /// after receive all process msg, then singal them by process 0
     for(i = 1; i < P; i++)
-      MPI_Isend(NULL, 0, MPI_INT, i, 1, MPI_COMM_WORLD, NULL);
+      MPI_Isend(NULL, 0, MPI_INT, i, 1, MPI_COMM_WORLD, &req);
   }
 }
 
