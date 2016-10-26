@@ -19,11 +19,16 @@
            repeat until sense = local_sense
 */
 
+/**
+ * Tiny changes to improve the performance of central barrier:
+ *  1. Change to one master node and other slaves, let slave nodes to send msg to master node.
+ *  2. Then, master node send msg to slave nodes, which reduce network communication O(N^2) to O(N). 
+ *  3. Do not allocate static status array to save O(N) space.
+ */
 
-static MPI_Status status;
 static int P;
 
-void gtmpi_init(int num_threads){ P = num_threads; }
+void gtmpi_init(int num_threads) { P = num_threads; }
 
 void gtmpi_barrier(){
   int vpid, i;
@@ -32,10 +37,11 @@ void gtmpi_barrier(){
   
   if (vpid != 0) {
     MPI_Isend(NULL, 0, MPI_INT, 0, 1, MPI_COMM_WORLD, NULL);
-    MPI_Recv(NULL, 0, MPI_INT, 0, 1, MPI_COMM_WORLD, &status);
+    MPI_Recv(NULL, 0, MPI_INT, 0, 1, MPI_COMM_WORLD, NULL);
   } else {
     for(i = 1; i < P; i++)
-      MPI_Recv(NULL, 0, MPI_INT, i, 1, MPI_COMM_WORLD, &status);
+      MPI_Recv(NULL, 0, MPI_INT, i, 1, MPI_COMM_WORLD, NULL);
+    /// after receive all process msg, then singal them by process 0
     for(i = 1; i < P; i++)
       MPI_Isend(NULL, 0, MPI_INT, i, 1, MPI_COMM_WORLD, NULL);
   }

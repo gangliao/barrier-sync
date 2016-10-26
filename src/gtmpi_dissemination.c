@@ -48,8 +48,8 @@ void gtmpi_barrier(){
   MPI_Comm_rank(MPI_COMM_WORLD, &pe);
 
   for (i = 1; i < P; i <<= 1) {
-    MPI_Isend(NULL, 0, MPI_INT, mod(pe + i, P), 0, comm, NULL);
-    MPI_Recv( NULL, 0, MPI_INT, mod(pe - i, P), 0, comm, NULL);
+    MPI_Isend(NULL, 0, MPI_INT, mod(pe + i, P), 0, MPI_COMM_WORLD, NULL);
+    MPI_Recv( NULL, 0, MPI_INT, mod(pe - i, P), 0, MPI_COMM_WORLD, NULL);
   }
 }
 

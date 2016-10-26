@@ -67,10 +67,10 @@ void gtmpi_init(int num_threads){
 }
 
 void gtmpi_barrier(){
-  int pe, stride;
+  int i, pe, stride;
   int tag = 0;
   
-  MPI_Comm_Rank(MPI_COMM_WORLD, &pe);
+  MPI_Comm_rank(MPI_COMM_WORLD, &pe);
 
   /// here, we set master process is final winner, slaves are losers.
   if (pe == 0) {

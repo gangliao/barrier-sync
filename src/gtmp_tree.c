@@ -35,6 +35,14 @@
 		repeat until locksense = sense
 */
 
+/**
+ *  Improve the performance of barrier tree via the follow strategies.
+ *  1. node data structure cache padding
+ *  2. inline _gtmp_barrier_node and gtmp_barrier_aux function
+ *  3. allocate align memory and put each node in one cache line
+ *  4. using __sync_fetch_add_sub atomic operation to replace omp critical section
+ */
+
 #define  true   1
 #define  false  0
 
@@ -48,14 +56,16 @@ typedef struct _node_t {
   int count;
   int locksense;
   struct _node_t* parent;
+  /// 1. node data structure cache padding
   int8_t padding[BARRIER_NODE_PADDING];
 } node_t;
 
 static int num_leaves;
 static node_t* nodes;
 
+/// 2. inline gtmp_barrier_aux to avoid extra overhead
 inline void gtmp_barrier_aux(node_t* node, int sense);
-
+/// 2. inline _gtmp_get_node to avoid extra overhead
 inline node_t* _gtmp_get_node(int i){
   return &nodes[i];
 }
@@ -73,6 +83,7 @@ void gtmp_init(int num_threads){
   num_leaves = v/2;
 
   /* Setting up the tree */
+  /// 3. allocate align memory and each node occupy a cache line.
   posix_memalign((void**)&nodes, LEVEL1_DCACHE_LINESIZE,
 	sizeof(node_t) * num_nodes);
 
@@ -108,7 +119,9 @@ void gtmp_barrier(){
   gtmp_barrier_aux(mynode, sense);
 }
 
+
 void gtmp_barrier_aux(node_t* node, int sense){
+  /// 4. using __sync_fetch_add_sub atomic operation to replace omp critical section
   if(__sync_fetch_and_sub(&node->count, 1) == 1) {
     if(node->parent != NULL)
       gtmp_barrier_aux(node->parent, sense);
