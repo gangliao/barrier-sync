@@ -22,10 +22,17 @@
 #define true   1
 #define false  0
 
+#ifndef LEVEL1_DCACHE_LINESIZE
+#define LEVEL1_DCACHE_LINESIZE 64
+#endif
+
+#define CENTRAL_BARRIER_PADDING  (LEVEL1_DCACHE_LINESIZE - 12)
+
 typedef struct { 
   uint8_t  sense_;
   uint32_t count_;
   uint32_t num_threads_;
+  int8_t padding[CENTRAL_BARRIER_PADDING];
 } central_barrier_t;
 
 central_barrier_t barrier_;
