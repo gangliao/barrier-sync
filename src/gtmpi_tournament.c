@@ -106,7 +106,7 @@ void gtmpi_barrier() {
     while (stride > 1) {
       stride >>= 1;
       if ((pe + stride) < P) {
-        MPI_Isend(NULL, 0, MPI_INT, pe - stride, tag, MPI_COMM_WORLD, &req);
+        MPI_Isend(NULL, 0, MPI_INT, pe + stride, tag, MPI_COMM_WORLD, &req);
       }  /* if */
     }  /* while */
   }  /* if-else */
