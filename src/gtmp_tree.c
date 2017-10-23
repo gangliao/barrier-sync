@@ -64,9 +64,9 @@ static int num_leaves;
 static node_t* nodes;
 
 /// 2. inline gtmp_barrier_aux to avoid extra overhead
-inline void gtmp_barrier_aux(node_t* node, int sense);
+void gtmp_barrier_aux(node_t* node, int sense);
 /// 2. inline _gtmp_get_node to avoid extra overhead
-inline node_t* _gtmp_get_node(int i){
+node_t* _gtmp_get_node(int i){
   return &nodes[i];
 }
 
